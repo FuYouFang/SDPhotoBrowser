@@ -14,8 +14,10 @@
 {
     __weak SDWaitingView *_waitingView;
     BOOL _didCheckSize;
+    // 如果 image 的高度大于 self 的高度的话，就会创建一个 scrollview 和一个 imageView
     UIScrollView *_scroll;
     UIImageView *_scrollImageView;
+    
     UIScrollView *_zoomingScroolView;
     UIImageView *_zoomingImageView;
     CGFloat _totalScale;
@@ -34,9 +36,6 @@
         UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(zoomImage:)];
         pinch.delegate = self;
         [self addGestureRecognizer:pinch];
-        
-
-    
     }
     return self;
 }
@@ -54,16 +53,20 @@
     CGSize imageSize = self.image.size;
     
     if (self.bounds.size.width * (imageSize.height / imageSize.width) > self.bounds.size.height) {
+        // 图片的高度大于 self 的高度
         if (!_scroll) {
             UIScrollView *scroll = [[UIScrollView alloc] init];
             scroll.backgroundColor = [UIColor whiteColor];
+            
             UIImageView *imageView = [[UIImageView alloc] init];
             imageView.image = self.image;
             _scrollImageView = imageView;
+            
             [scroll addSubview:imageView];
             scroll.backgroundColor = SDPhotoBrowserBackgrounColor;
             _scroll = scroll;
             [self addSubview:scroll];
+            
             if (_waitingView) {
                 [self bringSubviewToFront:_waitingView];
             }

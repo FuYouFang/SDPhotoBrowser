@@ -84,11 +84,14 @@
     [self addSubview:saveButton];
 }
 
+/**
+ *  保存图片
+ */
 - (void)saveImage
 {
     int index = _scrollView.contentOffset.x / _scrollView.bounds.size.width;
     UIImageView *currentImageView = _scrollView.subviews[index];
-    
+    //
     UIImageWriteToSavedPhotosAlbum(currentImageView.image, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
     
     UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc] init];
@@ -142,6 +145,9 @@
         UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(imageViewDoubleTaped:)];
         doubleTap.numberOfTapsRequired = 2;
         
+        // create a relationship with another gesture recognizer that will prevent this gesture's actions from being called until otherGestureRecognizer transitions to UIGestureRecognizerStateFailed
+        // if otherGestureRecognizer transitions to UIGestureRecognizerStateRecognized or UIGestureRecognizerStateBegan then this recognizer will instead transition to UIGestureRecognizerStateFailed
+        // example usage: a single tap may require a double tap to fail
         [singleTap requireGestureRecognizerToFail:doubleTap];
         
         [imageView addGestureRecognizer:singleTap];
@@ -185,7 +191,7 @@
     }
     
     
-    
+    // 获取原图片在 self 上的对应位置
     CGRect targetTemp = [self.sourceImagesContainerView convertRect:sourceView.frame toView:self];
     
     UIImageView *tempView = [[UIImageView alloc] init];
@@ -224,26 +230,22 @@
         scale = 2.0;
     }
     
-    SDBrowserImageView *view = (SDBrowserImageView *)recognizer.view;
-
-    [view doubleTapToZommWithScale:scale];
+    [imageView doubleTapToZommWithScale:scale];
 }
 
 - (void)layoutSubviews
 {
     [super layoutSubviews];
     
+    // scrollView 的width 比 self 的 width 大，这样图片和图片之间就有一定的距离
     CGRect rect = self.bounds;
     rect.size.width += SDPhotoBrowserImageViewMargin * 2;
-    
     _scrollView.bounds = rect;
     _scrollView.center = self.center;
     
     CGFloat y = 0;
-    CGFloat w = _scrollView.frame.size.width - SDPhotoBrowserImageViewMargin * 2;
+    CGFloat w = _scrollView.frame.size.width - SDPhotoBrowserImageViewMargin * 2; // self.width
     CGFloat h = _scrollView.frame.size.height;
-    
-    
     
     [_scrollView.subviews enumerateObjectsUsingBlock:^(SDBrowserImageView *obj, NSUInteger idx, BOOL *stop) {
         CGFloat x = SDPhotoBrowserImageViewMargin + idx * (SDPhotoBrowserImageViewMargin * 2 + w);
@@ -272,6 +274,7 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(UIView *)object change:(NSDictionary *)change context:(void *)context
 {
+    // 父 view 的 frame 改变时，会调用 image 的 clear 方法
     if ([keyPath isEqualToString:@"frame"]) {
         self.frame = object.bounds;
         SDBrowserImageView *currentImageView = _scrollView.subviews[_currentImageIndex];
@@ -281,6 +284,9 @@
     }
 }
 
+/**
+ *  动画显示 第一张图片
+ */
 - (void)showFirstImage
 {
     UIView *sourceView = nil;

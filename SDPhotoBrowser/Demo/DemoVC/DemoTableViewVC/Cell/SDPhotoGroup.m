@@ -33,6 +33,7 @@
 - (void)setPhotoItemArray:(NSArray *)photoItemArray
 {
     _photoItemArray = photoItemArray;
+    
     [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
     [photoItemArray enumerateObjectsUsingBlock:^(SDPhotoItem *obj, NSUInteger idx, BOOL *stop) {
